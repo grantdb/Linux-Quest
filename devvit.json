@@ -1,0 +1,23 @@
+{
+  "$schema": "https://developers.reddit.com/schema/config-file.v1.json",
+  "name": "linux-quest",
+  "post": {
+    "dir": "webviews",
+    "entrypoints": {
+      "default": {
+        "entry": "index.html",
+        "height": "tall"
+      }
+    }
+  },
+  "blocks": {
+    "entry": "src/main.tsx"
+  },
+  "permissions": {
+    "redis": true,
+    "reddit": true
+  },
+  "dev": {
+    "subreddit": "linux_quest_dev"
+  }
+}
