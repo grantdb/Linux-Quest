@@ -7,6 +7,7 @@ import BiosEntry from './components/BiosEntry';
 import InstallLogic from './components/InstallLogic';
 import RebootValidation from './components/RebootValidation';
 import BonusDrivers from './components/BonusDrivers';
+import Partitioning from './components/Partitioning';
 import Leaderboard from './components/Leaderboard';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -41,9 +42,10 @@ const App: React.FC = () => {
   const calculateScore = (data: GameData) => {
     const base = 1000;
     const biosBonus = Math.max(0, 500 - (data.biosTime || 5000) / 10);
+    const partitionBonus = data.partitionScore || 0;
     const driverBonus = data.driversSuccess ? 500 : 0;
     const multiplier = data.hardware === 'LAPTOP' ? 2.5 : data.hardware === 'PC' ? 1.0 : 0.5;
-    return Math.round((base + biosBonus + driverBonus) * multiplier);
+    return Math.round((base + biosBonus + partitionBonus + driverBonus) * multiplier);
   };
 
   const sendScoreToDevvit = (score: number) => {
@@ -76,6 +78,9 @@ const App: React.FC = () => {
         }
         break;
       case GameState.INSTALL_LOGIC:
+        setGameState(GameState.PARTITIONING);
+        break;
+      case GameState.PARTITIONING:
         setGameState(GameState.BONUS_DRIVERS);
         break;
       case GameState.BONUS_DRIVERS:
@@ -109,6 +114,8 @@ const App: React.FC = () => {
         return <BiosEntry hardware={gameData.hardware!} onComplete={(biosTime) => nextStep({ biosTime })} />;
       case GameState.INSTALL_LOGIC:
         return <InstallLogic hardware={gameData.hardware!} onComplete={() => nextStep({})} />;
+      case GameState.PARTITIONING:
+        return <Partitioning onComplete={(partitionScore) => nextStep({ partitionScore })} />;
       case GameState.BONUS_DRIVERS:
         return <BonusDrivers onComplete={(driversSuccess) => nextStep({ driversSuccess })} />;
       case GameState.REBOOT_VALIDATION:

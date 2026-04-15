@@ -3,10 +3,11 @@ export const GameState = {
   USB_PREP: 1,
   BIOS_ENTRY: 2,
   INSTALL_LOGIC: 3,
-  REBOOT_VALIDATION: 4,
-  BONUS_DRIVERS: 5,
-  SUCCESS: 6,
-  FAILURE: 7
+  PARTITIONING: 4,
+  REBOOT_VALIDATION: 5,
+  BONUS_DRIVERS: 6,
+  SUCCESS: 7,
+  FAILURE: 8
 } as const;
 
 export type GameState = typeof GameState[keyof typeof GameState];
@@ -19,6 +20,7 @@ export interface GameData {
   usbFormat?: FSFormat;
   flashTool?: string;
   biosTime?: number;
+  partitionScore?: number;
   driversSuccess?: boolean;
   difficultyMultiplier?: number;
   finalScore?: number;

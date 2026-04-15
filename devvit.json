@@ -4,10 +4,7 @@
   "post": {
     "dir": "webviews",
     "entrypoints": {
-      "default": {
-        "entry": "index.html",
-        "height": "tall"
-      }
+      "default": "index.html"
     }
   },
   "blocks": {
