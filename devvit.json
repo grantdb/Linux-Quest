@@ -4,11 +4,11 @@
   "post": {
     "dir": "webviews",
     "entrypoints": {
-      "default": "index.html"
+      "default": {
+        "entry": "index.html",
+        "height": "tall"
+      }
     }
-  },
-  "blocks": {
-    "entry": "src/main.tsx"
   },
   "permissions": {
     "redis": true,

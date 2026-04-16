@@ -15,5 +15,11 @@ Linux Quest is an educational and interactive RPG-style adventure that takes pla
 - **Data Model**: Comprehensive type system for tracking equipment, installation steps, and hardware compatibility.
 - **Persistence**: Securely stores player progress and scores using Reddit's distributed state.
 
+## Legal
+
+This application is subject to the following legal agreements:
+- [Terms of Service](https://github.com/grantdb/reddit-app-legal/blob/main/linux-quest/TERMS.md)
+- [Privacy Policy](https://github.com/grantdb/reddit-app-legal/blob/main/linux-quest/PRIVACY.md)
+
 ---
 *Built for the Reddit community.*
