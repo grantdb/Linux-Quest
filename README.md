@@ -1,19 +1,27 @@
 # Linux Quest
 
-Linux Quest is an educational and interactive RPG-style adventure that takes players through the journey of discovering and mastering Linux distributions. Learn about kernels, packages, and systems while competing with other community members.
+![Reddit](https://img.shields.io/badge/Reddit-FF4500?style=for-the-badge&logo=reddit&logoColor=white)
+![Devvit](https://img.shields.io/badge/Devvit-FF4500?style=for-the-badge&logo=devvit&logoColor=white)
+![Linux](https://img.shields.io/badge/Focus-Linux_Mastery-E33332?style=for-the-badge&logo=linux&logoColor=white)
+![Education](https://img.shields.io/badge/Category-Educational_RPG-blue?style=for-the-badge)
+![Simulation](https://img.shields.io/badge/UX-Hardware_Simulation-brightgreen?style=for-the-badge)
+![Security](https://img.shields.io/badge/Security-Validated-success?style=for-the-badge)
+
+Linux Quest is an immersive educational RPG that guides community members through the intricacies of mastering Linux distributions and kernels. By combining simulation-style hardware interactions with a quest-based progression system, it turns technical learning into a high-engagement community event.
 
 ## Features
 
-- **Educational RPG Logic**: Engaging quest-based system that teaches real-world Linux concepts.
-- **Dynamic Leaderboards**: Track your progress and see how you rank against fellow explorers.
-- **Hardware Simulation**: Experience the process of "installing" and "configuring" virtual Linux environments.
-- **Rich Interactive UI**: A custom-designed frontend built for responsive gameplay inside Reddit.
+- **Mastery-Driven RPG Mechanics**: A sophisticated quest system that teaches real-world Linux concepts through interactive gameplay.
+- **Hardware & Kernel Simulation**: Allows users to experience "virtual installations" and system configurations directly within Reddit.
+- **Dynamic Progression Tracking**: Features specialized leaderboards that categorize players by their level of technical mastery.
+- **High-Fidelity Interaction**: Custom-engineered frontend ensures responsive, gaming-grade performance in the native browser environment.
 
-## Technical Details
+## Configuration
 
-- **Architecture**: Separated frontend (React) and backend (Devvit API) for a robust gaming experience.
-- **Data Model**: Comprehensive type system for tracking equipment, installation steps, and hardware compatibility.
-- **Persistence**: Securely stores player progress and scores using Reddit's distributed state.
+| Component | Description |
+|-----------|-------------|
+| **Architecture** | Utilizes a segmented React-to-Devvit bridge for high-performance state management. |
+| **Persistence** | Securely tracks player equipment, scores, and installation logs via Reddit's native storage. |
 
 ## Legal
 
