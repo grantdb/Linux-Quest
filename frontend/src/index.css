@@ -1,98 +1,116 @@
-@import "tailwindcss";
-
-@theme {
-  --color-terminal-bg: #000800;
-  --color-terminal-green: #00ff41;
-  --color-terminal-dim: #003b00;
-  --color-terminal-bright: #00ff41;
+:root {
+  --terminal-bg: #0a0a0c;
+  --terminal-bright: #00ff41;
+  --terminal-dim: #003b00;
+  --terminal-text: #d1d5db;
+  --terminal-accent: #3b82f6;
 }
 
-@layer base {
-  body {
-    @apply bg-terminal-bg text-terminal-green m-0 overflow-hidden;
-    font-family: "Courier Prime", monospace;
-    background-image: radial-gradient(circle at center, #001a00 0%, #000800 100%);
-  }
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: #000;
+  color: var(--terminal-text);
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  overflow: hidden;
+  height: 100vh;
 }
 
 .crt-monitor {
   position: relative;
-  overflow: hidden;
-  box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.8);
-  border-radius: 20px;
+  background: var(--terminal-bg);
+  box-shadow: inset 0 0 100px rgba(0,0,0,0.8);
 }
 
-/* Vignette Effect */
-.crt-monitor::before {
-  content: " ";
-  display: block;
+/* THIN SCANLINES FOR MOBILE CLARITY */
+.scanlines {
   position: absolute;
-  top: 0; left: 0; bottom: 0; right: 0;
-  background: radial-gradient(circle, transparent 50%, rgba(0, 0, 0, 0.75) 150%);
-  z-index: 30;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%,
+    rgba(0, 0, 0, 0.05) 50%
+  ), linear-gradient(
+    90deg,
+    rgba(255, 0, 0, 0.01),
+    rgba(0, 255, 0, 0.005),
+    rgba(0, 0, 255, 0.01)
+  );
+  background-size: 100% 2px, 2px 100%;
   pointer-events: none;
-}
-
-.crt-monitor::after {
-  content: " ";
-  display: block;
-  position: absolute;
-  top: 0; left: 0; bottom: 0; right: 0;
-  background: rgba(18, 16, 16, 0.05);
-  opacity: 0;
-  z-index: 31;
-  pointer-events: none;
-  animation: flicker 0.15s infinite;
+  z-index: 10;
+  opacity: 0.8;
 }
 
 .crt-screen {
-  @apply relative z-10 w-full h-full p-8 box-border flex flex-col;
-  text-shadow: 0 0 8px rgba(0, 255, 65, 0.8), 0 0 2px rgba(0, 255, 65, 1);
+  position: relative;
+  z-index: 5;
 }
 
-.scanlines {
+.crt-screen::after {
+  content: " ";
+  display: block;
   position: absolute;
-  top: 0; left: 0; width: 100%; height: 100%;
-  z-index: 20;
-  background: linear-gradient(
-    rgba(18, 16, 16, 0) 50%,
-    rgba(0, 0, 0, 0.3) 50%
-  );
-  background-size: 100% 3px;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: rgba(18, 16, 16, 0.02);
+  opacity: 0;
+  z-index: 2;
   pointer-events: none;
-}
-
-.scanline-sweep {
-  position: absolute;
-  top: 0; left: 0; width: 100%; height: 2px;
-  background: rgba(0, 255, 65, 0.1);
-  opacity: 0.5;
-  pointer-events: none;
-  animation: scanline 8s linear infinite;
-  z-index: 25;
-}
-
-.static-noise {
-  position: absolute;
-  top: 0; left: 0; width: 100%; height: 100%;
-  background: url("https://grainy-gradients.vercel.app/noise.svg");
-  opacity: 0.03;
-  z-index: 35;
-  pointer-events: none;
+  animation: flicker 0.1s infinite;
 }
 
 @keyframes flicker {
   0% { opacity: 0.1; }
-  5% { opacity: 0.2; }
-  10% { opacity: 0.1; }
-  15% { opacity: 0.3; }
-  20% { opacity: 0.1; }
-  25% { opacity: 0.2; }
-  30% { opacity: 0.1; }
-  100% { opacity: 0.1; }
+  5% { opacity: 0.15; }
+  10% { opacity: 0.08; }
+  15% { opacity: 0.2; }
+  20% { opacity: 0.05; }
+  25% { opacity: 0.3; }
+  30% { opacity: 0.15; }
+  35% { opacity: 0.12; }
+  40% { opacity: 0.08; }
+  45% { opacity: 0.25; }
+  50% { opacity: 0.3; }
+  55% { opacity: 0.05; }
+  60% { opacity: 0.2; }
+  65% { opacity: 0.25; }
+  70% { opacity: 0.15; }
+  75% { opacity: 0.18; }
+  80% { opacity: 0.22; }
+  85% { opacity: 0.08; }
+  90% { opacity: 0.1; }
+  95% { opacity: 0.28; }
+  100% { opacity: 0.18; }
 }
 
-@keyframes scanline {
-  0% { transform: translateY(-100%); }
-  100% { transform: translateY(100vh); }
+.custom-scrollbar::-webkit-scrollbar {
+  width: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.01);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--terminal-bright);
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }

@@ -5,3 +5,9 @@ dist/
 webviews/assets/
 coverage/
 *.log
+node_modules
+dist
+.devvit
+*.log
+.DS_Store
+.env

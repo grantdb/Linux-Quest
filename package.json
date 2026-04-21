@@ -10,10 +10,10 @@
     "upload": "npm run build:webview && devvit upload"
   },
   "dependencies": {
-    "@devvit/public-api": "^0.12.19"
+    "@devvit/public-api": "0.12.20"
   },
   "devDependencies": {
-    "devvit": "^0.12.19",
+    "devvit": "0.12.20",
     "typescript": "latest"
   }
 }

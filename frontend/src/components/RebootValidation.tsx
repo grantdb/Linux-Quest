@@ -1,84 +1,142 @@
 import React, { useState, useEffect } from 'react';
-import type { Hardware, FSFormat } from '../types';
-import { motion } from 'framer-motion';
-import { ShieldCheck, Cpu } from 'lucide-react';
+import { ShieldAlert, Activity, RefreshCw, Cpu, Database, Zap, Lock, HardDrive, XCircle, Terminal, Check } from 'lucide-react';
 
 interface Props {
-  hardware: Hardware;
-  usbFormat: FSFormat;
-  onComplete: (error?: string) => void;
+  gameData: any;
+  onComplete: () => void;
 }
 
-const RebootValidation: React.FC<Props> = ({ hardware, usbFormat, onComplete }) => {
-  const [phase, setPhase] = useState<'LOADING' | 'VERIFYING' | 'RESULT'>('LOADING');
+const RebootValidation: React.FC<Props> = ({ gameData, onComplete }) => {
+  const [auditPhase, setAuditPhase] = useState(0);
+  const [isComplete, setIsComplete] = useState(false);
+  
+  // FAILURE LOGIC
+  const hasBootConflict = gameData.partitionScheme === 'MBR' && gameData.bootloader === 'systemd-boot';
+  const hasHardwareConflict = gameData.hardware === 'HYBRID_MOBILE' && (gameData.profile === 'Gaming' || gameData.profile === 'Workstation');
+  const isFatal = hasBootConflict || hasHardwareConflict;
+
+  const CHECKS = [
+    { id: 'KERNEL', label: 'Kernel_Signature', icon: Cpu, desc: 'Verifying core DNA alignment.', pass: true },
+    { id: 'PARTITION', label: 'Partition_Map', icon: Database, desc: 'Validating block structure.', pass: !hasBootConflict },
+    { id: 'HARDWARE', label: 'Hardware_Sync', icon: Zap, desc: 'Testing architecture links.', pass: !hasHardwareConflict },
+    { id: 'SECURITY', label: 'Security_Level', icon: Lock, desc: 'LUKS verification.', pass: true },
+    { id: 'IO', label: 'I/O_Integrity', icon: HardDrive, desc: 'Sector alignment.', pass: true },
+    { id: 'FINAL', label: 'Boot_Sequence', icon: Activity, desc: 'Executing final jump.', pass: !isFatal },
+  ];
 
   useEffect(() => {
-    const timer1 = setTimeout(() => setPhase('VERIFYING'), 2500);
-    const timer2 = setTimeout(() => {
-      if (hardware === 'LAPTOP' && usbFormat === 'NTFS') {
-        onComplete("GRUB Rescue: Unknown Filesystem. (Legacy BIOS cannot read NTFS boot partitions on this hardware)");
-      } else {
-        onComplete();
-      }
-    }, 6000);
+    const interval = setInterval(() => {
+      setAuditPhase(prev => {
+        if (prev >= CHECKS.length) {
+          clearInterval(interval);
+          setIsComplete(true);
+          return prev;
+        }
+        // If we hit a failing check, stop the audit there
+        if (prev > 0 && !CHECKS[prev - 1].pass) {
+          clearInterval(interval);
+          setIsComplete(true);
+          return prev;
+        }
+        return prev + 1;
+      });
+    }, 800);
+    return () => clearInterval(interval);
+  }, [isFatal]);
 
-    return () => {
-      clearTimeout(timer1);
-      clearTimeout(timer2);
-    };
-  }, [hardware, usbFormat, onComplete]);
+  const auditSuccess = isComplete && !isFatal;
 
   return (
-    <div className="flex flex-col h-full bg-black items-center justify-center space-y-8 font-mono relative overflow-hidden">
-      <div className="absolute top-0 left-0 w-full p-4 border-b border-terminal-dim flex justify-between text-[10px] opacity-40">
-        <span>VMLINUZ-6.5.0-AMD64</span>
-        <span>UPTIME: 0.002492s</span>
+    <div style={{ height: '100%', padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px', overflow: 'hidden', background: !auditSuccess && isComplete ? 'rgba(239, 68, 68, 0.05)' : 'transparent' }}>
+      {/* HEADER */}
+      <div style={{ textAlign: 'center' }}>
+         <div style={{ display: 'inline-flex', padding: '12px', background: auditSuccess ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', borderRadius: '20px', border: `1px solid ${auditSuccess ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)'}`, marginBottom: '12px' }}>
+            {auditSuccess ? <ShieldAlert style={{ color: '#10b981' }} size={24} /> : <XCircle style={{ color: '#ef4444' }} size={24} />}
+         </div>
+         <h1 style={{ fontSize: '20px', fontWeight: 900, color: '#fff', margin: 0 }}>{auditSuccess ? 'Final System Audit' : 'SYSTEM_HALTED'}</h1>
+         <p style={{ fontSize: '10px', color: '#fff', opacity: 0.4, fontWeight: 700, margin: '4px 0 0 0' }}>{auditSuccess ? 'Validating architectural integrity.' : 'CRITICAL_BOOT_FAILURE: ARCHITECTURE_MISMATCH'}</p>
       </div>
 
-      <div className="text-center space-y-6 z-10">
-        <div className="relative">
-          <motion.div
-             animate={{ rotate: 360 }}
-             transition={{ duration: 0.5, repeat: Infinity, ease: 'linear' }}
-             className="w-16 h-16 border-2 border-t-terminal-bright border-r-transparent border-b-transparent border-l-transparent rounded-full mx-auto"
-          />
-          <Cpu className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 text-terminal-dim" />
+      {/* DIAGNOSTIC GRID */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', flexGrow: 1 }}>
+         {CHECKS.map((check, i) => {
+           const isVisible = i <= auditPhase;
+           const hasFailed = i < auditPhase && !check.pass;
+           
+           return (
+             <div 
+               key={check.label} 
+               style={{ 
+                 padding: '14px', 
+                 background: 'rgba(255,255,255,0.02)', 
+                 borderRadius: '16px', 
+                 border: `1px solid ${hasFailed ? 'rgba(239, 68, 68, 0.3)' : (i < auditPhase ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255,255,255,0.05)')}`,
+                 display: 'flex',
+                 gap: '12px',
+                 alignItems: 'center',
+                 opacity: isVisible ? 1 : 0.2,
+                 transition: 'all 0.4s'
+               }}
+             >
+                <div style={{ padding: '8px', background: hasFailed ? 'rgba(239, 68, 68, 0.1)' : (i < auditPhase ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.05)'), borderRadius: '10px' }}>
+                   <check.icon size={14} style={{ color: hasFailed ? '#ef4444' : (i < auditPhase ? '#10b981' : 'rgba(255,255,255,0.4)') }} />
+                </div>
+                <div style={{ flexGrow: 1 }}>
+                   <h3 style={{ fontSize: '10px', fontWeight: 900, color: '#fff', margin: 0, textTransform: 'uppercase' }}>{check.label}</h3>
+                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ fontSize: '7px', color: hasFailed ? '#ef4444' : '#fff', opacity: 0.4, fontWeight: 800 }}>{hasFailed ? 'FAILED_0x800' : (i < auditPhase ? 'PASSED_0x00' : 'WAITING...')}</span>
+                      {i < auditPhase && !hasFailed && <Check size={8} style={{ color: '#10b981' }} />}
+                   </div>
+                </div>
+             </div>
+           );
+         })}
+      </div>
+
+      {/* PANIC / SUCCESS BADGE */}
+      {isComplete && (
+        <div style={{ padding: '16px', background: auditSuccess ? 'rgba(16, 185, 129, 0.05)' : 'rgba(239, 68, 68, 0.1)', borderRadius: '16px', border: `1px solid ${auditSuccess ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.3)'}`, display: 'flex', alignItems: 'center', gap: '16px', animation: 'fadeIn 0.5s' }}>
+           {auditSuccess ? <Zap size={32} style={{ color: '#10b981' }} /> : <Terminal size={32} style={{ color: '#ef4444' }} />}
+           <div style={{ textAlign: 'left' }}>
+              <h2 style={{ fontSize: '16px', fontWeight: 900, color: '#fff', margin: 0 }}>{auditSuccess ? 'Architecture Verified' : 'Kernel Panic Detected'}</h2>
+              <p style={{ fontSize: '9px', color: auditSuccess ? '#10b981' : '#ef4444', fontWeight: 700, margin: 0, opacity: 0.8 }}>
+                {hasBootConflict && 'ERROR: systemd-boot requires GPT partition scheme.'}
+                {hasHardwareConflict && 'ERROR: ARM architecture incompatible with X86 profiles.'}
+                {auditSuccess && 'SYSTEM_HEALTH_INDEX: 100% // READY_FOR_ENV'}
+              </p>
+           </div>
         </div>
-        
-        <div className="space-y-1">
-          <h2 className="text-2xl font-bold tracking-[0.3em] uppercase text-terminal-bright">
-            {phase === 'LOADING' ? 'REBOOTING' : 'INITIATING BOOT'}
-          </h2>
-          <p className="text-[10px] text-terminal-dim uppercase tracking-widest">
-            {phase === 'LOADING' ? 'Synchronizing filesystem buffers...' : 'Probing ACPI tables & PCI interrupts...'}
-          </p>
-        </div>
+      )}
+
+      {/* FOOTER ACTION */}
+      <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '16px' }}>
+         <button
+           onClick={onComplete}
+           style={{ 
+             width: '100%', 
+             padding: '14px', 
+             background: auditSuccess ? '#fff' : 'rgba(239, 68, 68, 0.1)', 
+             color: auditSuccess ? '#000' : '#ef4444', 
+             borderRadius: '12px', 
+             border: auditSuccess ? 'none' : '1px solid rgba(239, 68, 68, 0.2)', 
+             fontWeight: 900, 
+             fontSize: '13px', 
+             cursor: 'pointer',
+             display: 'flex',
+             alignItems: 'center',
+             justifyContent: 'center',
+             gap: '10px',
+             textTransform: 'uppercase'
+           }}
+         >
+            <RefreshCw size={16} />
+            {auditSuccess ? 'Initialize Final Reboot' : 'Emergency System Rescue'}
+         </button>
       </div>
 
-      <div className="w-full max-w-lg space-y-1 px-8 opacity-60 text-[10px] h-32 overflow-hidden flex flex-col justify-end">
-        <p>[    0.000000] Linux version 6.5.0-generic (gcc version 12.3.0)</p>
-        <p>[    0.003412] Command line: BOOT_IMAGE=/vmlinuz root=UUID=5a2f... quiet splash</p>
-        <p>[    0.051022] x86/fpu: Supporting XSAVE feature 0x001: 'x87 floating point registers'</p>
-        <p>[    0.509211] Generic {hardware} hardware profile activated.</p>
-        {phase === 'VERIFYING' && (
-          <>
-            <p className="text-terminal-bright">[    1.203912] Mounting ESP at /boot/efi (FS: {usbFormat})...</p>
-            <p className="text-terminal-bright font-bold">[    2.409112] GRUB_CHECK: Verifying stage2 bootloader signatures...</p>
-            <motion.p 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-terminal-green"
-            >
-              [    3.110292] Loading Initial RAM Disk...
-            </motion.p>
-          </>
-        )}
-      </div>
-
-      <div className="flex items-center space-x-4 text-xs opacity-30 mt-8">
-        <ShieldCheck className="w-4 h-4" />
-        <span className="tracking-widest uppercase italic">Secure Boot: {hardware === 'HIGH_END' ? 'ENABLED' : 'DISABLED'}</span>
-      </div>
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+      `}} />
     </div>
   );
 };

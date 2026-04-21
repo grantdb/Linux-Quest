@@ -1,27 +1,38 @@
 export const GameState = {
   HARDWARE_SELECT: 0,
   USB_PREP: 1,
-  BIOS_ENTRY: 2,
-  INSTALL_LOGIC: 3,
-  PARTITIONING: 4,
-  REBOOT_VALIDATION: 5,
-  BONUS_DRIVERS: 6,
-  SUCCESS: 7,
-  FAILURE: 8
+  NETWORK_SETUP: 2,
+  BIOS_ENTRY: 3,
+  SYSTEM_SETUP: 4,
+  PARTITIONING: 5,
+  INSTALL_LOGIC: 6,
+  BONUS_DRIVERS: 7,
+  REBOOT_VALIDATION: 8,
+  SUCCESS: 9,
+  FAILURE: 10
 } as const;
 
-export type GameState = typeof GameState[keyof typeof GameState];
+export type GameState = typeof GameState[keyof typeof GameState] | 'BOOTING';
 
-export type Hardware = 'LAPTOP' | 'PC' | 'HIGH_END';
-export type FSFormat = 'FAT32' | 'NTFS';
+export type Hardware = 
+  | 'AMD_RYZEN' | 'INTEL_CORE' | 'NVIDIA_RTX' | 'HYBRID_MOBILE';
+
+export type FSFormat = 'FAT32' | 'NTFS' | 'EXT4' | 'ISO9660' | 'UDF';
+export type FlashTool = 'Rufus' | 'Ventoy' | 'BalenaEtcher' | 'ImgBurn' | 'Nero Burning ROM' | 'Xfburn';
+export type PartitionScheme = 'GPT' | 'MBR' | 'ISO9660' | 'UDF';
 
 export interface GameData {
   hardware?: Hardware;
   usbFormat?: FSFormat;
-  flashTool?: string;
+  flashTool?: FlashTool;
+  scheme?: PartitionScheme;
+  netData?: any;
   biosTime?: number;
   partitionScore?: number;
   driversSuccess?: boolean;
+  bootloader?: string;
+  initSystem?: string;
+  updateFrequency?: string;
   difficultyMultiplier?: number;
   finalScore?: number;
   error?: string;

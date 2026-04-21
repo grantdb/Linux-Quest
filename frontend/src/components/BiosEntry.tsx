@@ -1,122 +1,116 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
-import type { Hardware } from '../types';
+import React, { useState, useEffect } from 'react';
+import { Activity, ShieldCheck, Cpu, HardDrive, Terminal } from 'lucide-react';
+
 
 interface Props {
-  hardware: Hardware;
-  onComplete: (time: number) => void;
+  hardware: string;
+  onComplete: (biosTime: number) => void;
 }
 
-// Defined outside component so it's stable across renders
-const KEYS = ['F2', 'F10', 'F8', 'DEL'];
-
 const BiosEntry: React.FC<Props> = ({ hardware, onComplete }) => {
-  const totalTime = hardware === 'LAPTOP' ? 2 : hardware === 'PC' ? 4 : 8;
-  const [fKey, setFKey] = useState<string>('');
-  const [success, setSuccess] = useState(false);
-  const [attempts, setAttempts] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(totalTime);
-  const startTime = useRef(Date.now());
-  // Ref so the interval callback can read latest success without a dependency
-  const successRef = useRef(false);
-  const onCompleteRef = useRef(onComplete);
-  onCompleteRef.current = onComplete;
+  const PRETTY_NAMES: Record<string, string> = {
+    'AMD_RYZEN': 'Ryzen Elite',
+    'INTEL_CORE': 'Core Ultra',
+    'NVIDIA_RTX': 'RTX Station',
+    'HYBRID_MOBILE': 'Hybrid Mobile'
+  };
+  const prettyName = PRETTY_NAMES[hardware] || hardware;
+
+  const [startTime] = useState(Date.now());
+  const [pressed, setPressed] = useState(false);
+  const [flashing, setFlashing] = useState(true);
 
   useEffect(() => {
-    setFKey(KEYS[Math.floor(Math.random() * KEYS.length)]);
-  }, []);
+    const timer = setInterval(() => setFlashing(f => !f), 400);
+    const timeout = setTimeout(() => {
+      if (!pressed) onComplete(99999);
+    }, 5000);
 
-  // Single, stable interval — uses functional updater so it never needs timeLeft in deps
-  useEffect(() => {
-    if (success) return;
-
-    const timer = setInterval(() => {
-      if (successRef.current) {
-        clearInterval(timer);
-        return;
-      }
-      setTimeLeft(prev => {
-        const next = Math.max(0, prev - 0.1);
-        if (next === 0) {
-          clearInterval(timer);
-          onCompleteRef.current(99999);
-        }
-        return next;
-      });
-    }, 100);
-
-    return () => clearInterval(timer);
-  }, [success]); // only restarts if success flips
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (successRef.current) return;
-      const pressed = e.key.toUpperCase();
-      if (pressed === fKey || (pressed === 'DELETE' && fKey === 'DEL')) {
-        successRef.current = true;
-        setSuccess(true);
-        setTimeout(() => onCompleteRef.current(Date.now() - startTime.current), 1000);
-      } else {
-        setAttempts(prev => prev + 1);
-      }
+    return () => {
+      clearInterval(timer);
+      clearTimeout(timeout);
     };
+  }, [pressed, onComplete]);
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [fKey]);
+  const handlePress = () => {
+    setPressed(true);
+    const time = Date.now() - startTime;
+    setTimeout(() => onComplete(time), 800);
+  };
+
+  const containerStyle: React.CSSProperties = {
+    backgroundColor: '#020617',
+    color: '#fff',
+    height: '100%',
+    padding: '40px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '40px',
+    textAlign: 'center',
+    position: 'relative',
+    overflow: 'hidden'
+  };
 
   return (
-    <div className="flex flex-col h-full items-center justify-center space-y-8 bg-black/50 p-8">
-      <div className="text-terminal-bright font-mono text-lg space-y-1 self-start">
-        <p>PhoenixBIOS Setup Utility</p>
-        <p>Copyright 1985-2026 Phoenix Technologies Ltd.</p>
-        <p>CPU: Virtual Pro x64 @ 3.40GHz</p>
-        <p>Memory: 8192MB System RAM Passed</p>
-        <p className="text-terminal-dim">Detected: {hardware} Hardware Profile</p>
+    <div style={containerStyle} onClick={handlePress}>
+      {/* BACKGROUND DECORATION */}
+      <div style={{ position: 'absolute', top: '-100px', right: '-100px', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%)', filter: 'blur(40px)' }} />
+      <div style={{ position: 'absolute', bottom: '-100px', left: '-100px', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(16, 185, 129, 0.05) 0%, transparent 70%)', filter: 'blur(40px)' }} />
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', zIndex: 10 }}>
+         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', opacity: 0.5, marginBottom: '8px' }}>
+            <Terminal size={14} />
+            <span style={{ fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.2em' }}>{prettyName} Architecture v2.4</span>
+         </div>
+         <h1 style={{ fontSize: '32px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.02em', color: '#fff' }}>POST_INITIALIZED</h1>
       </div>
 
-      <div className="flex flex-col items-center space-y-6">
-        {!success ? (
-          <>
-            <motion.div
-              animate={{ scale: [1, 1.1, 1] }}
-              transition={{ duration: 0.2, repeat: Infinity }}
-              className="text-5xl font-bold text-white bg-red-600 px-12 py-6 border-4 border-white shadow-2xl"
-            >
-              PRESS {fKey}
-            </motion.div>
-            <div className="w-64 h-2 bg-terminal-dim rounded-full overflow-hidden">
-              <motion.div
-                className="h-full bg-terminal-bright"
-                initial={{ width: '100%' }}
-                animate={{ width: `${(timeLeft / totalTime) * 100}%` }}
-                transition={{ duration: 0.1 }}
-              />
-            </div>
-            <p className="text-terminal-green/50 italic animate-pulse">TIME TO BOOT: {timeLeft.toFixed(1)}s</p>
-            {attempts > 0 && <p className="text-red-400">MISFIRE! Total Attempts: {attempts}</p>}
-          </>
-        ) : (
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1.2, opacity: 1 }}
-            className="text-4xl font-bold text-terminal-bright"
-          >
-            Entering Setup...
-          </motion.div>
-        )}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', zIndex: 10 }}>
+         <button style={{
+           padding: '32px 64px',
+           background: flashing ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
+           border: `2px solid ${flashing ? '#3b82f6' : 'rgba(59, 130, 246, 0.2)'}`,
+           borderRadius: '24px',
+           transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+           cursor: 'pointer',
+           display: 'flex',
+           flexDirection: 'column',
+           gap: '8px',
+           alignItems: 'center',
+           boxShadow: flashing ? '0 0 30px rgba(59, 130, 246, 0.3)' : 'none'
+         }}>
+            <span style={{ fontSize: '18px', fontWeight: 900, color: '#fff', letterSpacing: '0.1em' }}>INTERRUPT BOOT</span>
+            <span style={{ fontSize: '10px', fontWeight: 700, color: '#3b82f6', opacity: 0.8 }}>SYSTEM CONFIGURATION</span>
+         </button>
       </div>
 
-      <div className="absolute bottom-12 grid grid-cols-4 gap-6">
-        {KEYS.map(k => (
-          <div
-            key={k}
-            className={`w-20 h-20 border-2 flex items-center justify-center font-bold text-2xl transition-all ${k === fKey && !success ? 'border-terminal-bright shadow-[0_0_15px_#00ff41]' : 'border-terminal-dim opacity-30'}`}
-          >
-            {k}
-          </div>
-        ))}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '32px', position: 'absolute', bottom: '60px', zIndex: 10 }}>
+         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', opacity: 0.4 }}>
+            <Cpu size={14} style={{ color: '#3b82f6' }} />
+            <span style={{ fontSize: '9px', fontWeight: 900 }}>HANDSHAKE_OK</span>
+         </div>
+         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', opacity: 0.4 }}>
+            <HardDrive size={14} style={{ color: '#10b981' }} />
+            <span style={{ fontSize: '9px', fontWeight: 900 }}>BLOCK_ALIGNED</span>
+         </div>
+         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', opacity: 0.4 }}>
+            <ShieldCheck size={14} style={{ color: '#8b5cf6' }} />
+            <span style={{ fontSize: '9px', fontWeight: 900 }}>SECURE_BOOT</span>
+         </div>
       </div>
+
+      {pressed && (
+        <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(2, 6, 23, 0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, backdropFilter: 'blur(10px)' }}>
+           <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '32px 64px', borderRadius: '24px', border: '1px solid #3b82f6', boxShadow: '0 0 50px rgba(59, 130, 246, 0.4)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                 <Activity size={24} style={{ color: '#3b82f6' }} className="animate-spin" />
+                 <span style={{ color: '#fff', fontSize: '14px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Entering UEFI Setup...</span>
+              </div>
+           </div>
+        </div>
+      )}
     </div>
   );
 };
