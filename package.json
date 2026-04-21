@@ -1,19 +1,20 @@
 {
-  "name": "linux-quest",
-  "version": "0.0.1",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "dev": "devvit playtest",
-    "build:webview": "npm run build --prefix frontend && powershell -Command \"Remove-Item -Path webviews/assets -Recurse -Force -ErrorAction SilentlyContinue; Copy-Item -Path frontend/dist/* -Destination webviews -Recurse -Force\"",
-    "bundle": "npm run build:webview && devvit bundle",
-    "upload": "npm run build:webview && devvit upload"
-  },
-  "dependencies": {
-    "@devvit/public-api": "0.12.20"
-  },
-  "devDependencies": {
-    "devvit": "0.12.20",
-    "typescript": "latest"
-  }
+    "name":  "linux-quest",
+    "version":  "0.0.1",
+    "private":  true,
+    "type":  "module",
+    "scripts":  {
+                    "dev":  "devvit playtest",
+                    "build:webview":  "npm run build --prefix frontend \u0026\u0026 powershell -Command \"Remove-Item -Path webviews/assets -Recurse -Force -ErrorAction SilentlyContinue; Copy-Item -Path frontend/dist/* -Destination webviews -Recurse -Force\"",
+                    "bundle":  "npm run build:webview \u0026\u0026 devvit bundle",
+                    "upload":  "npm run build:webview \u0026\u0026 devvit upload",
+                    "publish:public":  "devvit publish --public"
+                },
+    "dependencies":  {
+                         "@devvit/public-api":  "0.12.20"
+                     },
+    "devDependencies":  {
+                            "devvit":  "0.12.20",
+                            "typescript":  "latest"
+                        }
 }
