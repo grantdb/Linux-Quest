@@ -31,3 +31,4 @@ This application is subject to the following legal agreements:
 
 ---
 *Built for the Reddit community.*
+
