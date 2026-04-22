@@ -25,7 +25,7 @@ const Partitioning: React.FC<Props> = ({ onComplete }) => {
       { id: 1, mount: '/', label: 'ROOT', size: 112, fs: 'ext4', color: '#3b82f6', boot: true, encrypt: false },
       { id: 2, mount: '/home', label: 'USERS', size: 400, fs: 'btrfs', color: '#8b5cf6', boot: false, encrypt: true },
     ]);
-    setCliOutput(prev => [...prev.slice(-3), '> mkfs.ext4 /dev/nvme0n1p1', '> mkfs.btrfs /dev/nvme0n1p2']);
+    setCliOutput(['[SYSTEM] Wiping block device...', '> mkfs.ext4 /dev/nvme0n1p1', '> mkfs.btrfs /dev/nvme0n1p2']);
   };
 
   useEffect(() => {
@@ -92,19 +92,41 @@ const Partitioning: React.FC<Props> = ({ onComplete }) => {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span style={{ fontSize: '9px', fontWeight: 900, color: p.color }}>B_0{idx + 1}</span>
-                    <span style={{ fontSize: '7px', background: 'rgba(255,255,255,0.05)', color: '#fff', padding: '1px 5px', borderRadius: '4px', fontWeight: 900 }}>{p.fs.toUpperCase()}</span>
+                    <select 
+                      style={{ ...inputStyle, width: 'auto', padding: '2px 6px', height: '22px' }}
+                      value={p.fs}
+                      onChange={(e) => setPartitions(partitions.map(x => x.id === p.id ? { ...x, fs: e.target.value } : x))}
+                    >
+                      <option value="ext4">EXT4</option>
+                      <option value="btrfs">BTRFS</option>
+                      <option value="xfs">XFS</option>
+                      <option value="fat32">FAT32</option>
+                      <option value="swap">SWAP</option>
+                    </select>
                  </div>
                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', gap: '4px' }}>
-                       <Zap size={12} style={{ color: p.boot ? '#f59e0b' : 'rgba(255,255,255,0.1)', cursor: 'pointer' }} onClick={() => setPartitions(partitions.map(x => x.id === p.id ? { ...x, boot: !x.boot } : x))} />
-                       <Shield size={12} style={{ color: p.encrypt ? '#10b981' : 'rgba(255,255,255,0.1)', cursor: 'pointer' }} onClick={() => setPartitions(partitions.map(x => x.id === p.id ? { ...x, encrypt: !x.encrypt } : x))} />
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                       <div 
+                         style={{ display: 'flex', alignItems: 'center', gap: '4px', color: p.boot ? '#f59e0b' : 'rgba(255,255,255,0.3)', cursor: 'pointer', background: p.boot ? 'rgba(245,158,11,0.1)' : 'transparent', padding: '2px 6px', borderRadius: '4px' }}
+                         onClick={() => setPartitions(partitions.map(x => x.id === p.id ? { ...x, boot: !x.boot } : x))}
+                       >
+                         <Zap size={10} />
+                         <span style={{ fontSize: '7px', fontWeight: 900 }}>BOOT</span>
+                       </div>
+                       <div 
+                         style={{ display: 'flex', alignItems: 'center', gap: '4px', color: p.encrypt ? '#10b981' : 'rgba(255,255,255,0.3)', cursor: 'pointer', background: p.encrypt ? 'rgba(16,185,129,0.1)' : 'transparent', padding: '2px 6px', borderRadius: '4px' }}
+                         onClick={() => setPartitions(partitions.map(x => x.id === p.id ? { ...x, encrypt: !x.encrypt } : x))}
+                       >
+                         <Shield size={10} />
+                         <span style={{ fontSize: '7px', fontWeight: 900 }}>LUKS</span>
+                       </div>
                     </div>
-                    <Trash2 size={12} style={{ color: '#ef4444', opacity: 0.4, cursor: 'pointer' }} onClick={() => setPartitions(partitions.filter(x => x.id !== p.id))} />
+                    <Trash2 size={12} style={{ color: '#ef4444', opacity: 0.4, cursor: 'pointer', marginLeft: '4px' }} onClick={() => setPartitions(partitions.filter(x => x.id !== p.id))} />
                  </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '8px' }}>
-                 <input style={inputStyle} value={p.mount} placeholder="Mount Point" onChange={(e) => setPartitions(partitions.map(x => x.id === p.id ? { ...x, mount: e.target.value } : x))} />
+                 <input style={inputStyle} value={p.mount} placeholder="Mount Point (e.g. /, /boot, /home)" onChange={(e) => setPartitions(partitions.map(x => x.id === p.id ? { ...x, mount: e.target.value } : x))} />
                  <input style={inputStyle} type="number" value={p.size} placeholder="Size (GB)" onChange={(e) => setPartitions(partitions.map(x => x.id === p.id ? { ...x, size: parseInt(e.target.value) || 0 } : x))} />
               </div>
            </div>

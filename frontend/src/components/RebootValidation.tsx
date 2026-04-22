@@ -100,8 +100,8 @@ const RebootValidation: React.FC<Props> = ({ gameData, onComplete }) => {
            <div style={{ textAlign: 'left' }}>
               <h2 style={{ fontSize: '16px', fontWeight: 900, color: '#fff', margin: 0 }}>{auditSuccess ? 'Architecture Verified' : 'Kernel Panic Detected'}</h2>
               <p style={{ fontSize: '9px', color: auditSuccess ? '#10b981' : '#ef4444', fontWeight: 700, margin: 0, opacity: 0.8 }}>
-                {hasBootConflict && 'ERROR: systemd-boot requires GPT partition scheme.'}
-                {hasHardwareConflict && 'ERROR: ARM architecture incompatible with X86 profiles.'}
+                {hasBootConflict && 'ERROR: systemd-boot requires GPT partition scheme. SUGGESTION: Return to "Media Prep" and select GPT, or change bootloader to GRUB.'}
+                {hasHardwareConflict && 'ERROR: ARM architecture incompatible with heavy profiles. SUGGESTION: Return to "Identity" and select Battery Saver, or use Intel/AMD hardware.'}
                 {auditSuccess && 'SYSTEM_HEALTH_INDEX: 100% // READY_FOR_ENV'}
               </p>
            </div>
