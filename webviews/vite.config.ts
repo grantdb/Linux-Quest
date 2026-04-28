@@ -6,7 +6,8 @@ export default defineConfig({
   plugins: [react()],
   base: './',
   build: {
-    outDir: 'dist',
+    outDir: '../webroot',
     emptyOutDir: true,
+    target: 'es2020'
   }
 })

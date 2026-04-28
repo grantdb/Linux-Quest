@@ -2,13 +2,17 @@
   "$schema": "https://developers.reddit.com/schema/config-file.v1.json",
   "name": "linux-quest",
   "post": {
-    "dir": "webviews",
+    "dir": "webroot",
     "entrypoints": {
       "default": {
         "entry": "index.html",
         "height": "tall"
       }
     }
+  },
+  "server": {
+    "dir": "dist/server",
+    "entry": "index.js"
   },
   "permissions": {
     "redis": true,

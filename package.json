@@ -1,20 +1,22 @@
 {
     "name":  "linux-quest",
-    "version":  "0.0.1",
+    "version":  "0.0.14",
     "private":  true,
     "type":  "module",
     "scripts":  {
                     "dev":  "devvit playtest",
-                    "build:webview":  "npm run build --prefix frontend \u0026\u0026 powershell -Command \"Remove-Item -Path webviews/assets -Recurse -Force -ErrorAction SilentlyContinue; Copy-Item -Path frontend/dist/* -Destination webviews -Recurse -Force\"",
-                    "bundle":  "npm run build:webview \u0026\u0026 devvit bundle",
-                    "upload":  "npm run build:webview \u0026\u0026 devvit upload",
-                    "publish:public":  "devvit publish --public"
+                    "bundle":  "cd webviews \u0026\u0026 npm run build",
+                    "build":  "node --experimental-strip-types ./tools/build.ts --minify",
+                    "watch":  "node --experimental-strip-types ./tools/build.ts",
+                    "upload":  "npm run bundle \u0026\u0026 npm run build \u0026\u0026 node ../../scripts/validate-build.js \u0026\u0026 devvit upload",
+                    "publish:public":  "npm run bundle \u0026\u0026 npm run build \u0026\u0026 node ../../scripts/validate-build.js \u0026\u0026 devvit publish --public",
+                    "type-check":  "tsc --noEmit"
                 },
     "dependencies":  {
-                         "@devvit/public-api":  "0.12.20"
+                         "@devvit/public-api":  "0.12.21"
                      },
     "devDependencies":  {
-                            "devvit":  "0.12.20",
+                            "devvit":  "0.12.21",
                             "typescript":  "latest"
                         }
 }
