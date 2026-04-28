@@ -17,7 +17,7 @@ export type GameState = typeof GameState[keyof typeof GameState] | 'BOOTING';
 export type Hardware = 
   | 'AMD_RYZEN' | 'INTEL_CORE' | 'RASPI_ARM' | 'HYBRID_MOBILE';
 
-export type FSFormat = 'FAT32' | 'NTFS' | 'EXT4' | 'ISO9660' | 'UDF';
+export type FSFormat = 'FAT32' | 'NTFS' | 'EXT4' | 'ISO9660' | 'UDF' | 'BTRFS';
 export type FlashTool = 'Rufus' | 'Ventoy' | 'BalenaEtcher' | 'ImgBurn' | 'Nero Burning ROM' | 'Xfburn';
 export type PartitionScheme = 'GPT' | 'MBR' | 'ISO9660' | 'UDF';
 

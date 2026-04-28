@@ -4,9 +4,10 @@ import { ShieldAlert, XCircle, Cpu, Database, Zap, Lock, HardDrive, Activity, Ch
 interface Props {
   gameData: any;
   onComplete: () => void;
+  onFail: () => void;
 }
 
-const RebootValidation: React.FC<Props> = ({ gameData, onComplete }) => {
+const RebootValidation: React.FC<Props> = ({ gameData, onComplete, onFail }) => {
   const [auditPhase, setAuditPhase] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
   
@@ -107,7 +108,8 @@ const RebootValidation: React.FC<Props> = ({ gameData, onComplete }) => {
       {/* FOOTER ACTION */}
       <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '20px' }}>
          <button
-           onClick={onComplete}
+           disabled={!isComplete}
+           onClick={auditSuccess ? onComplete : onFail}
            style={{ 
              width: '100%', 
              padding: '16px', 
@@ -117,12 +119,13 @@ const RebootValidation: React.FC<Props> = ({ gameData, onComplete }) => {
              border: auditSuccess ? 'none' : '1px solid rgba(239, 68, 68, 0.2)', 
              fontWeight: 900, 
              fontSize: '15px', 
-             cursor: 'pointer',
+             cursor: isComplete ? 'pointer' : 'not-allowed',
              display: 'flex',
              alignItems: 'center',
              justifyContent: 'center',
              gap: '12px',
-             textTransform: 'uppercase'
+             textTransform: 'uppercase',
+             opacity: isComplete ? 1 : 0.4
            }}
          >
             <RefreshCw size={18} />

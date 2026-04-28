@@ -16,6 +16,7 @@ const BiosEntry: React.FC<Props> = ({ hardware, onComplete }) => {
   };
   const prettyName = PRETTY_NAMES[hardware] || hardware;
 
+  const hasCompleted = React.useRef(false);
   const [startTime] = useState(Date.now());
   const [pressed, setPressed] = useState(false);
   const [flashing, setFlashing] = useState(true);
@@ -28,16 +29,21 @@ const BiosEntry: React.FC<Props> = ({ hardware, onComplete }) => {
     }, 100);
     
     const timeout = setTimeout(() => {
-      if (!pressed) onComplete(99999);
+      if (!hasCompleted.current) {
+        hasCompleted.current = true;
+        onComplete(99999);
+      }
     }, 5000);
 
     return () => {
       clearInterval(timer);
       clearTimeout(timeout);
     };
-  }, [pressed, onComplete]);
+  }, [onComplete]);
 
   const handlePress = () => {
+    if (hasCompleted.current) return;
+    hasCompleted.current = true;
     setPressed(true);
     const time = Date.now() - startTime;
     setTimeout(() => onComplete(time), 800);

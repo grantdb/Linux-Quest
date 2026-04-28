@@ -57,7 +57,7 @@ const App: React.FC = () => {
     return () => window.removeEventListener('message', handleMessage);
   }, []);
 
-  const nextStep = (newData: Partial<GameData>) => {
+  const nextStep = React.useCallback((newData: Partial<GameData>) => {
     const updatedData = { ...gameData, ...newData };
     setGameData(updatedData);
     
@@ -67,7 +67,7 @@ const App: React.FC = () => {
     if (gameState === GameState.REBOOT_VALIDATION) {
       // Calculate final score
       const base = 1000;
-      const biosBonus = Math.max(0, 5000 - (updatedData.biosTime || 5000)) / 10;
+      const biosBonus = Math.min(Math.max(0, 5000 - (updatedData.biosTime || 5000)) / 10, 400);
       const finalScore = Math.floor(base + biosBonus + (updatedData.partitionScore || 0));
       
       setGameData(prev => ({ ...prev, finalScore }));
@@ -81,7 +81,11 @@ const App: React.FC = () => {
     if (currentIndex < states.length - 1) {
       setGameState(states[currentIndex + 1] as GameState);
     }
-  };
+  }, [gameData, gameState]);
+
+  const onFail = React.useCallback(() => {
+    setGameState(GameState.SYSTEM_SETUP);
+  }, []);
 
   const prevStep = () => {
     const states = Object.values(GameState).filter(v => typeof v === 'number') as number[];
@@ -192,7 +196,7 @@ const App: React.FC = () => {
                 {gameState === GameState.NETWORK_SETUP && <NetworkSetup onComplete={(netData) => nextStep({ netData })} />}
                 {gameState === GameState.SYSTEM_SETUP && <SystemSetup hardware={gameData.hardware} onComplete={(data) => nextStep(data)} />}
                 {gameState === GameState.BONUS_DRIVERS && <BonusDrivers onComplete={(driversSuccess) => nextStep({ driversSuccess })} />}
-                {gameState === GameState.REBOOT_VALIDATION && <RebootValidation gameData={gameData} onComplete={() => nextStep({})} />}
+                {gameState === GameState.REBOOT_VALIDATION && <RebootValidation gameData={gameData} onComplete={() => nextStep({})} onFail={onFail} />}
 
                 {gameState === GameState.SUCCESS && (
                   <div style={{ height: '100%', display: 'flex', overflow: 'hidden', background: '#020617' }}>

@@ -27,44 +27,20 @@ Devvit.addCustomPostType({
       }
     };
 
-    const launchGame = () => {
-      context.ui.showWebView({
-        url: 'index.html',
-        onMessage: (msg) => onMessage(msg),
-      });
-    };
-
     return (
       <vstack height="100%" width="100%" alignment="middle center">
-        <zstack width="100%" height="100%" alignment="middle center">
-            <image
-                url="https://images.unsplash.com/photo-1629654297299-c8506221ca97?auto=format&fit=crop&q=80&w=1200"
-                imageHeight={800}
-                imageWidth={1200}
-                height="100%"
-                width="100%"
-                resizeMode="cover"
-            />
-            <vstack alignment="middle center" gap="medium" backgroundColor="rgba(0,0,0,0.8)" height="100%" width="100%" padding="large">
-                <text size="xxlarge" weight="bold" color="#00ff41" shadow="low">LINUX QUEST</text>
-                <text size="large" color="#00ff41">Can you survive the kernel panic?</text>
-                <spacer size="medium" />
-                <button 
-                    appearance="primary" 
-                    icon="play-fill"
-                    size="large"
-                    onPress={launchGame}
-                >
-                    BOOT SYSTEM
-                </button>
-            </vstack>
-        </zstack>
+        <webview
+          id="my-app"
+          url="index.html"
+          onMessage={onMessage}
+          height="100%"
+          width="100%"
+        />
       </vstack>
     );
   },
 });
 
-// Add a menu item to create the game post
 Devvit.addMenuItem({
   label: 'Create Linux Quest Post',
   location: 'subreddit',
@@ -74,13 +50,15 @@ Devvit.addMenuItem({
     await reddit.submitPost({
       title: 'Linux Quest: Can you install it?',
       subredditName: subreddit.name,
+      // Using custom post type by name
+      type: 'Linux Quest',
       preview: (
         <vstack alignment="middle center" height="100%" width="100%" gap="medium">
           <text size="xlarge" weight="bold" color="#00ff41">LINUX QUEST</text>
           <text>Loading virtual machine...</text>
         </vstack>
       ),
-    });
+    } as any);
     ui.showToast('Linux Quest post created!');
   },
 });

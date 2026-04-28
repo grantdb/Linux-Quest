@@ -20,6 +20,8 @@ const InstallLogic: React.FC<Props> = ({ onComplete }) => {
     { name: 'Finalizing_Boot_Sequence', log: 'grub-install /dev/nvme0n1... BOOTABLE' },
   ];
 
+  const taskIdxRef = React.useRef(0);
+
   useEffect(() => {
     const interval = setInterval(() => {
       setProgress(prev => {
@@ -31,8 +33,9 @@ const InstallLogic: React.FC<Props> = ({ onComplete }) => {
         const next = prev + 1;
         
         // Update logs and tasks periodically
-        const taskIdx = Math.floor(prev / 14);
-        if (TASKS[taskIdx] && TASKS[taskIdx].name !== currentTask) {
+        const taskIdx = Math.floor(next / 14);
+        if (TASKS[taskIdx] && taskIdx !== taskIdxRef.current) {
+          taskIdxRef.current = taskIdx;
           setCurrentTask(TASKS[taskIdx].name);
           setLogs(prevLogs => [...prevLogs.slice(-5), `> ${TASKS[taskIdx].log}`]);
         }
@@ -42,7 +45,7 @@ const InstallLogic: React.FC<Props> = ({ onComplete }) => {
     }, 120);
 
     return () => clearInterval(interval);
-  }, [onComplete, currentTask]);
+  }, [onComplete]);
 
   return (
     <div style={{ height: '100%', padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px', overflow: 'hidden' }}>

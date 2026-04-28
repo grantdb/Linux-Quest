@@ -16,12 +16,19 @@ Linux Quest is an immersive educational RPG that guides community members throug
 - **Dynamic Progression Tracking**: Features specialized leaderboards that categorize players by their level of technical mastery.
 - **High-Fidelity Interaction**: Custom-engineered frontend ensures responsive, gaming-grade performance in the native browser environment.
 
+## Technical Hardening (v0.0.17)
+
+This version introduces significant stability and architecture improvements:
+- **Direct Webview Rendering**: Reconciled post architecture for zero-latency loading.
+- **State Machine Resilience**: Implemented `useCallback` stability and `useRef` event guarding.
+- **Fail-Safe Logic**: Added emergency rescue paths for architecture mismatches (e.g., Raspi/Workstation).
+
 ## Configuration
 
 | Component | Description |
 |-----------|-------------|
-| **Architecture** | Utilizes a segmented React-to-Devvit bridge for high-performance state management. |
-| **Persistence** | Securely tracks player equipment, scores, and installation logs via Reddit's native storage. |
+| **Architecture** | Direct React Webview post with a thin server-side message bridge. |
+| **Persistence** | Global leaderboards managed via Devvit Redis. |
 
 ## Legal
 
