@@ -7,45 +7,98 @@ interface Props {
 
 const Leaderboard: React.FC<Props> = ({ scores }) => {
   return (
-    <div className="w-full max-w-md bg-terminal-dim/10 border-2 border-terminal-dim p-6 rounded-lg font-mono">
-      <div className="flex items-center justify-center space-x-2 mb-6 border-b border-terminal-dim pb-4">
-        <Trophy className="text-terminal-bright w-5 h-5" />
-        <h3 className="text-xl font-bold tracking-widest text-terminal-bright uppercase">Global Rankings</h3>
+    <div style={{
+      width: '100%',
+      maxWidth: '440px',
+      background: 'rgba(15, 23, 42, 0.4)',
+      backdropFilter: 'blur(20px)',
+      border: '1px solid rgba(255, 255, 255, 0.1)',
+      padding: '24px',
+      borderRadius: '24px',
+      fontFamily: 'monospace'
+    }}>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '12px',
+        marginBottom: '24px',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+        paddingBottom: '16px'
+      }}>
+        <Trophy style={{ color: '#3b82f6' }} size={20} />
+        <h3 style={{
+          fontSize: '18px',
+          fontWeight: 900,
+          letterSpacing: '0.1em',
+          color: '#fff',
+          textTransform: 'uppercase',
+          margin: 0
+        }}>Global Rankings</h3>
       </div>
       
-      <div className="space-y-4">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         {scores.length > 0 ? (
           scores.map((s, index) => (
             <div 
               key={`${s.member}-${index}`}
-              className={`flex items-center justify-between p-3 border ${
-                index === 0 ? 'border-terminal-bright bg-terminal-bright/5' : 'border-terminal-dim/30'
-              }`}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '12px 16px',
+                borderRadius: '12px',
+                background: index === 0 ? 'rgba(59, 130, 246, 0.1)' : 'rgba(255, 255, 255, 0.02)',
+                border: `1px solid ${index === 0 ? 'rgba(59, 130, 246, 0.3)' : 'rgba(255, 255, 255, 0.05)'}`,
+                transition: 'all 0.2s'
+              }}
             >
-              <div className="flex items-center space-x-4">
-                <span className={`w-6 text-center font-bold ${index === 0 ? 'text-terminal-bright' : 'text-terminal-dim'}`}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <span style={{ 
+                  width: '24px', 
+                  textAlign: 'center', 
+                  fontWeight: 900, 
+                  fontSize: '12px',
+                  color: index === 0 ? '#3b82f6' : 'rgba(255, 255, 255, 0.3)' 
+                }}>
                   {index + 1}.
                 </span>
-                <div className="flex items-center space-x-2">
-                  {index === 0 ? <Medal className="w-4 h-4 text-terminal-bright" /> : <User className="w-4 h-4 text-terminal-dim" />}
-                  <span className={index === 0 ? 'text-terminal-bright font-bold' : 'text-terminal-green/80'}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  {index === 0 ? <Medal size={14} style={{ color: '#3b82f6' }} /> : <User size={14} style={{ color: 'rgba(255, 255, 255, 0.2)' }} />}
+                  <span style={{ 
+                    fontSize: '13px',
+                    fontWeight: index === 0 ? 900 : 700,
+                    color: index === 0 ? '#fff' : 'rgba(255, 255, 255, 0.7)'
+                  }}>
                     {s.member}
                   </span>
                 </div>
               </div>
-              <span className={`font-bold ${index === 0 ? 'text-terminal-bright' : 'text-terminal-green'}`}>
+              <span style={{ 
+                fontSize: '14px',
+                fontWeight: 900, 
+                color: index === 0 ? '#3b82f6' : '#fff'
+              }}>
                 {s.score.toLocaleString()}
               </span>
             </div>
           ))
         ) : (
-          <div className="text-center py-8 text-terminal-dim italic select-none">
+          <div style={{ textAlign: 'center', padding: '32px', color: 'rgba(255, 255, 255, 0.2)', fontStyle: 'italic', fontSize: '12px' }}>
             Retrieving encrypted data...
           </div>
         )}
       </div>
       
-      <div className="mt-6 text-[10px] text-terminal-dim text-right uppercase tracking-tighter">
+      <div style={{
+        marginTop: '24px',
+        fontSize: '9px',
+        color: 'rgba(255, 255, 255, 0.2)',
+        textAlign: 'right',
+        textTransform: 'uppercase',
+        fontWeight: 900,
+        letterSpacing: '0.05em'
+      }}>
         Verified by Devvit Redis Grid
       </div>
     </div>

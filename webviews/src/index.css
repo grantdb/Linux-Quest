@@ -4,6 +4,9 @@
   --terminal-dim: #003b00;
   --terminal-text: #d1d5db;
   --terminal-accent: #3b82f6;
+  --text-xs: 10px;
+  --text-sm: 11px;
+  --text-base: 13px;
 }
 
 * {
@@ -15,9 +18,10 @@
 body {
   background-color: #000;
   color: var(--terminal-text);
-  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-family: 'Inter', 'JetBrains Mono', 'Fira Code', monospace;
   overflow: hidden;
   height: 100vh;
+  font-size: var(--text-sm);
 }
 
 .crt-monitor {
@@ -90,6 +94,15 @@ body {
   90% { opacity: 0.1; }
   95% { opacity: 0.28; }
   100% { opacity: 0.18; }
+}
+
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateX(10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.animate-fade-in {
+  animation: fadeSlideIn 0.4s ease-out forwards;
 }
 
 .custom-scrollbar::-webkit-scrollbar {

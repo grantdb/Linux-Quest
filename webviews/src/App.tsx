@@ -61,15 +61,19 @@ const App: React.FC = () => {
   const STEPS = [
     { state: GameState.HARDWARE_SELECT, label: 'Platform' },
     { state: GameState.USB_PREP, label: 'Media Prep' },
-    { state: GameState.NETWORK_SETUP, label: 'Network' },
-    { state: GameState.BIOS_ENTRY, label: 'Interruption' },
-    { state: GameState.SYSTEM_SETUP, label: 'Identity' },
+    { state: GameState.BIOS_ENTRY, label: 'BIOS' },
     { state: GameState.PARTITIONING, label: 'Storage' },
     { state: GameState.INSTALL_LOGIC, label: 'Deployment' },
+    { state: GameState.NETWORK_SETUP, label: 'Network' },
+    { state: GameState.SYSTEM_SETUP, label: 'Profile' },
     { state: GameState.BONUS_DRIVERS, label: 'Drivers' },
     { state: GameState.REBOOT_VALIDATION, label: 'Finalize' },
   ];
 
+  const getStorageTarget = () => {
+    if (gameData.hardware === 'HYBRID_MOBILE' || gameData.hardware === 'RASPI_ARM') return 'eMMC_FLASH_0';
+    return 'NVME_BLK_0';
+  };
 
   return (
     <ErrorBoundary>
@@ -95,7 +99,7 @@ const App: React.FC = () => {
           <div style={{ height: '48px', padding: '0 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', background: 'rgba(255,255,255,0.02)' }}>
              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <Terminal size={16} style={{ color: '#3b82f6' }} />
-                <span style={{ fontSize: '11px', fontWeight: 900, color: '#fff', opacity: 0.6, letterSpacing: '0.1em' }}>LINUX_QUEST // SETUP_WIZARD_v8.8</span>
+                <span style={{ fontSize: '11px', fontWeight: 900, color: '#fff', opacity: 0.6, letterSpacing: '0.1em' }}>LINUX_QUEST // SETUP_WIZARD_v9.0</span>
              </div>
              <div style={{ display: 'flex', gap: '8px' }}>
                 <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)' }} />
@@ -129,16 +133,16 @@ const App: React.FC = () => {
              </div>
 
              {/* CONTENT AREA */}
-             <div style={{ flexGrow: 1, position: 'relative', overflow: 'hidden' }}>
+             <div key={gameState} className="animate-fade-in" style={{ flexGrow: 1, position: 'relative', overflow: 'hidden' }}>
                 <div style={{ position: 'absolute', inset: 0, opacity: 0.05, pointerEvents: 'none', background: 'radial-gradient(circle at 50% 50%, #3b82f6 0%, transparent 70%)' }} />
                 
                 {gameState === GameState.HARDWARE_SELECT && <HardwareSelect onComplete={(hardware) => nextStep({ hardware })} />}
                 {gameState === GameState.USB_PREP && <UsbPrep onComplete={(usbFormat, flashTool, scheme) => nextStep({ usbFormat, flashTool, scheme })} />}
-                {gameState === GameState.NETWORK_SETUP && <NetworkSetup onComplete={(netData) => nextStep({ netData })} />}
                 {gameState === GameState.BIOS_ENTRY && <BiosEntry hardware={gameData.hardware || 'INTEL_CORE'} onComplete={(biosTime) => nextStep({ biosTime })} />}
                 {gameState === GameState.PARTITIONING && <Partitioning onComplete={(partitionScore) => nextStep({ partitionScore })} />}
                 {gameState === GameState.INSTALL_LOGIC && <InstallLogic onComplete={() => nextStep({})} />}
-                {gameState === GameState.SYSTEM_SETUP && <SystemSetup onComplete={(data) => nextStep(data)} />}
+                {gameState === GameState.NETWORK_SETUP && <NetworkSetup onComplete={(netData) => nextStep({ netData })} />}
+                {gameState === GameState.SYSTEM_SETUP && <SystemSetup hardware={gameData.hardware} onComplete={(data) => nextStep(data)} />}
                 {gameState === GameState.BONUS_DRIVERS && <BonusDrivers onComplete={(driversSuccess) => nextStep({ driversSuccess })} />}
                 {gameState === GameState.REBOOT_VALIDATION && <RebootValidation gameData={gameData} onComplete={() => nextStep({})} />}
 
@@ -198,7 +202,7 @@ const App: React.FC = () => {
              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: 0.5 }}>
                    <HardDrive size={14} style={{ color: '#3b82f6' }} />
-                   <span style={{ fontSize: '10px', fontWeight: 800, color: '#fff' }}>TARGET: NVME_BLK_0</span>
+                   <span style={{ fontSize: '10px', fontWeight: 800, color: '#fff' }}>TARGET: {getStorageTarget()}</span>
                 </div>
              </div>
              <div style={{ display: 'flex', gap: '12px' }}>
@@ -212,7 +216,7 @@ const App: React.FC = () => {
                 </button>
                 <div style={{ width: '1px', background: 'rgba(255,255,255,0.1)', margin: '0 4px' }} />
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: 0.3 }}>
-                   <span style={{ fontSize: '10px', fontWeight: 900, color: '#fff' }}>V8.8.0</span>
+                   <span style={{ fontSize: '10px', fontWeight: 900, color: '#fff' }}>V9.0.0</span>
                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }} />
                 </div>
              </div>

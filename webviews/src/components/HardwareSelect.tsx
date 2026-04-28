@@ -27,12 +27,12 @@ const HardwareSelect: React.FC<Props> = ({ onComplete }) => {
       specs: ['24 Cores', '6.0GHz', 'LGA1700', 'P/E Cores']
     },
     { 
-      id: 'NVIDIA_RTX' as Hardware, 
-      label: 'RTX Compute', 
-      desc: 'CUDA-optimized for AI and rendering.', 
+      id: 'RASPI_ARM' as Hardware, 
+      label: 'Pi 5 / SBC', 
+      desc: 'Optimized for efficient ARM-based IoT deployment.', 
       icon: Monitor, 
       color: '#10b981',
-      specs: ['AD102', '24GB VRAM', 'DLSS 3.5', 'Tensor V4']
+      specs: ['Cortex-A76', '8GB RAM', 'BCM2712', 'VideoCore VII']
     },
     { 
       id: 'HYBRID_MOBILE' as Hardware, 

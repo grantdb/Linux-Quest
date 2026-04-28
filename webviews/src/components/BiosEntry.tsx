@@ -11,7 +11,7 @@ const BiosEntry: React.FC<Props> = ({ hardware, onComplete }) => {
   const PRETTY_NAMES: Record<string, string> = {
     'AMD_RYZEN': 'Ryzen Elite',
     'INTEL_CORE': 'Core Ultra',
-    'NVIDIA_RTX': 'RTX Station',
+    'RASPI_ARM': 'Pi 5 Architecture',
     'HYBRID_MOBILE': 'Hybrid Mobile'
   };
   const prettyName = PRETTY_NAMES[hardware] || hardware;
@@ -19,9 +19,14 @@ const BiosEntry: React.FC<Props> = ({ hardware, onComplete }) => {
   const [startTime] = useState(Date.now());
   const [pressed, setPressed] = useState(false);
   const [flashing, setFlashing] = useState(true);
+  const [timeLeft, setTimeLeft] = useState(5.0);
 
   useEffect(() => {
-    const timer = setInterval(() => setFlashing(f => !f), 400);
+    const timer = setInterval(() => {
+      setFlashing(f => !f);
+      setTimeLeft(t => Math.max(0, t - 0.1));
+    }, 100);
+    
     const timeout = setTimeout(() => {
       if (!pressed) onComplete(99999);
     }, 5000);
@@ -53,6 +58,8 @@ const BiosEntry: React.FC<Props> = ({ hardware, onComplete }) => {
     overflow: 'hidden'
   };
 
+  const dashOffset = 283 - (timeLeft / 5) * 283;
+
   return (
     <div style={containerStyle} onClick={handlePress}>
       {/* BACKGROUND DECORATION */}
@@ -62,14 +69,35 @@ const BiosEntry: React.FC<Props> = ({ hardware, onComplete }) => {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', zIndex: 10 }}>
          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', opacity: 0.5, marginBottom: '8px' }}>
             <Terminal size={14} />
-            <span style={{ fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.2em' }}>{prettyName} Architecture v2.4</span>
+            <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.2em' }}>{prettyName} v2.4</span>
          </div>
-         <h1 style={{ fontSize: '32px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.02em', color: '#fff' }}>POST_INITIALIZED</h1>
+         <h1 style={{ fontSize: '36px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.02em', color: '#fff' }}>POST_INITIALIZED</h1>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', zIndex: 10 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px', zIndex: 10 }}>
+         {/* COUNTDOWN RING */}
+         <div style={{ position: 'relative', width: '120px', height: '120px' }}>
+            <svg style={{ transform: 'rotate(-90deg)', width: '120px', height: '120px' }}>
+               <circle cx="60" cy="60" r="45" fill="transparent" stroke="rgba(255,255,255,0.05)" strokeWidth="8" />
+               <circle 
+                  cx="60" 
+                  cy="60" 
+                  r="45" 
+                  fill="transparent" 
+                  stroke={timeLeft < 2 ? '#ef4444' : '#3b82f6'} 
+                  strokeWidth="8" 
+                  strokeDasharray="283" 
+                  strokeDashoffset={dashOffset} 
+                  style={{ transition: 'stroke-dashoffset 0.1s linear, stroke 0.3s' }}
+               />
+            </svg>
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', fontWeight: 900 }}>
+               {timeLeft.toFixed(1)}s
+            </div>
+         </div>
+
          <button style={{
-           padding: '32px 64px',
+           padding: '24px 48px',
            background: flashing ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
            border: `2px solid ${flashing ? '#3b82f6' : 'rgba(59, 130, 246, 0.2)'}`,
            borderRadius: '24px',
@@ -81,23 +109,23 @@ const BiosEntry: React.FC<Props> = ({ hardware, onComplete }) => {
            alignItems: 'center',
            boxShadow: flashing ? '0 0 30px rgba(59, 130, 246, 0.3)' : 'none'
          }}>
-            <span style={{ fontSize: '18px', fontWeight: 900, color: '#fff', letterSpacing: '0.1em' }}>INTERRUPT BOOT</span>
-            <span style={{ fontSize: '10px', fontWeight: 700, color: '#3b82f6', opacity: 0.8 }}>SYSTEM CONFIGURATION</span>
+            <span style={{ fontSize: '20px', fontWeight: 900, color: '#fff', letterSpacing: '0.1em' }}>INTERRUPT BOOT</span>
+            <span style={{ fontSize: '11px', fontWeight: 700, color: '#3b82f6', opacity: 0.8 }}>SYSTEM CONFIGURATION [F2/DEL]</span>
          </button>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '32px', position: 'absolute', bottom: '60px', zIndex: 10 }}>
          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', opacity: 0.4 }}>
-            <Cpu size={14} style={{ color: '#3b82f6' }} />
-            <span style={{ fontSize: '9px', fontWeight: 900 }}>HANDSHAKE_OK</span>
+            <Cpu size={16} style={{ color: '#3b82f6' }} />
+            <span style={{ fontSize: '11px', fontWeight: 900 }}>HANDSHAKE_OK</span>
          </div>
          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', opacity: 0.4 }}>
-            <HardDrive size={14} style={{ color: '#10b981' }} />
-            <span style={{ fontSize: '9px', fontWeight: 900 }}>BLOCK_ALIGNED</span>
+            <HardDrive size={16} style={{ color: '#10b981' }} />
+            <span style={{ fontSize: '11px', fontWeight: 900 }}>BLOCK_ALIGNED</span>
          </div>
          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', opacity: 0.4 }}>
-            <ShieldCheck size={14} style={{ color: '#8b5cf6' }} />
-            <span style={{ fontSize: '9px', fontWeight: 900 }}>SECURE_BOOT</span>
+            <ShieldCheck size={16} style={{ color: '#8b5cf6' }} />
+            <span style={{ fontSize: '11px', fontWeight: 900 }}>SECURE_BOOT</span>
          </div>
       </div>
 
