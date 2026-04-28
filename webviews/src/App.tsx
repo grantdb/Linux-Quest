@@ -1,4 +1,4 @@
-import React, { useState, Component } from 'react';
+import React, { useState, useEffect, Component } from 'react';
 import type { ReactNode } from 'react';
 import { GameState } from './types';
 import type { GameData } from './types';
@@ -11,6 +11,7 @@ import BonusDrivers from './components/BonusDrivers';
 import Partitioning from './components/Partitioning';
 import SystemSetup from './components/SystemSetup';
 import RebootValidation from './components/RebootValidation';
+import Leaderboard from './components/Leaderboard';
 import { Check, Activity, HardDrive, AlertOctagon, ChevronLeft, Terminal } from 'lucide-react';
 
 // FAIL-SAFE ERROR BOUNDARY
@@ -37,14 +38,46 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
 
 const App: React.FC = () => {
   const [gameState, setGameState] = useState<GameState>(GameState.HARDWARE_SELECT);
-  const [gameData, setGameData] = useState<GameData>({});
-  
+  const [gameData, setGameData] = useState<GameData>({
+    leaderboard: []
+  });
+
+  // DEVVIT MESSAGE HANDLING
+  useEffect(() => {
+    const handleMessage = (ev: MessageEvent) => {
+      const { type, data } = ev.data;
+      if (type === 'INITIAL_STATE' || type === 'LEADERBOARD_UPDATE') {
+        setGameData(prev => ({ ...prev, leaderboard: data.leaderboard }));
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    window.parent.postMessage({ type: 'READY' }, '*');
+
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
+
   const nextStep = (newData: Partial<GameData>) => {
     const updatedData = { ...gameData, ...newData };
     setGameData(updatedData);
     
     const states = Object.values(GameState).filter(v => typeof v === 'number') as number[];
     const currentIndex = states.indexOf(gameState as number);
+    
+    if (gameState === GameState.REBOOT_VALIDATION) {
+      // Calculate final score
+      const base = 1000;
+      const biosBonus = Math.max(0, 5000 - (updatedData.biosTime || 5000)) / 10;
+      const finalScore = Math.floor(base + biosBonus + (updatedData.partitionScore || 0));
+      
+      setGameData(prev => ({ ...prev, finalScore }));
+      setGameState(GameState.SUCCESS);
+      
+      // Send to Devvit
+      window.parent.postMessage({ type: 'GAME_COMPLETE', data: { score: finalScore } }, '*');
+      return;
+    }
+
     if (currentIndex < states.length - 1) {
       setGameState(states[currentIndex + 1] as GameState);
     }
@@ -108,25 +141,40 @@ const App: React.FC = () => {
              </div>
           </div>
 
+          {/* WIZARD BODY */}
           <div style={{ flexGrow: 1, display: 'flex', overflow: 'hidden' }}>
-             {/* SIDEBAR STEPPER */}
-             <div style={{ width: '120px', background: 'rgba(0,0,0,0.2)', borderRight: '1px solid rgba(255,255,255,0.05)', padding: '24px 0', display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                {STEPS.map((step, idx) => {
-                  const isCompleted = (gameState as number) > (step.state as number);
+             {/* LEFT NAVIGATION RAIL */}
+             <div style={{ width: '200px', borderRight: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.1)', padding: '24px 0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                {STEPS.map((step, i) => {
                   const isActive = gameState === step.state;
+                  const isPast = (gameState as number) > (step.state as number);
+                  
                   return (
-                    <div key={idx} style={{ 
-                      padding: '8px 16px', 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: '10px',
-                      background: isActive ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
-                      borderLeft: `3px solid ${isActive ? '#3b82f6' : 'transparent'}`,
-                      opacity: isActive || isCompleted ? 1 : 0.3,
-                      transition: 'all 0.3s'
-                    }}>
-                       {isCompleted ? <Check size={10} style={{ color: '#10b981' }} /> : <div style={{ width: '10px', height: '10px', borderRadius: '50%', border: `1px solid ${isActive ? '#3b82f6' : 'rgba(255,255,255,0.4)'}` }} />}
-                       <span style={{ fontSize: '10px', fontWeight: 800, color: isActive ? '#3b82f6' : '#fff' }}>{step.label}</span>
+                    <div 
+                      key={step.label}
+                      style={{ 
+                        padding: '12px 24px', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '12px',
+                        background: isActive ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
+                        borderLeft: `3px solid ${isActive ? '#3b82f6' : 'transparent'}`,
+                        transition: 'all 0.3s'
+                      }}
+                    >
+                       <div style={{ 
+                         width: '18px', 
+                         height: '18px', 
+                         borderRadius: '50%', 
+                         border: `1.5px solid ${isActive || isPast ? '#3b82f6' : 'rgba(255,255,255,0.1)'}`,
+                         display: 'flex',
+                         alignItems: 'center',
+                         justifyContent: 'center',
+                         background: isPast ? '#3b82f6' : 'transparent'
+                       }}>
+                          {isPast ? <Check size={10} color="#fff" strokeWidth={3} /> : <span style={{ fontSize: '9px', fontWeight: 900, color: isActive ? '#3b82f6' : 'rgba(255,255,255,0.2)' }}>{i + 1}</span>}
+                       </div>
+                       <span style={{ fontSize: '11px', fontWeight: 800, color: isActive ? '#fff' : 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{step.label}</span>
                     </div>
                   );
                 })}
@@ -147,50 +195,57 @@ const App: React.FC = () => {
                 {gameState === GameState.REBOOT_VALIDATION && <RebootValidation gameData={gameData} onComplete={() => nextStep({})} />}
 
                 {gameState === GameState.SUCCESS && (
-                  <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#020617', overflow: 'hidden', position: 'relative' }}>
-                    <div style={{ padding: '40px', flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '32px' }}>
-                       {/* CINEMATIC LOGO REVEAL */}
-                       <div style={{ position: 'relative' }}>
-                          <div style={{ position: 'absolute', inset: -20, background: 'radial-gradient(circle, rgba(59, 130, 246, 0.2) 0%, transparent 70%)', filter: 'blur(20px)', animation: 'pulse 2s infinite' }} />
-                          <div style={{ padding: '24px', background: 'rgba(255,255,255,0.02)', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                             <Activity size={60} style={{ color: '#3b82f6', filter: 'drop-shadow(0 0 10px #3b82f6)' }} />
+                  <div style={{ height: '100%', display: 'flex', overflow: 'hidden', background: '#020617' }}>
+                    {/* LEFT PANEL: SUCCESS INFO */}
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', borderRight: '1px solid rgba(255,255,255,0.05)' }}>
+                       <div style={{ padding: '40px', flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '32px' }}>
+                          <div style={{ position: 'relative' }}>
+                             <div style={{ position: 'absolute', inset: -20, background: 'radial-gradient(circle, rgba(59, 130, 246, 0.2) 0%, transparent 70%)', filter: 'blur(20px)', animation: 'pulse 2s infinite' }} />
+                             <div style={{ padding: '24px', background: 'rgba(255,255,255,0.02)', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <Activity size={60} style={{ color: '#3b82f6', filter: 'drop-shadow(0 0 10px #3b82f6)' }} />
+                             </div>
+                          </div>
+
+                          <div style={{ textAlign: 'center' }}>
+                             <h1 style={{ fontSize: '32px', fontWeight: 900, color: '#fff', margin: 0, letterSpacing: '0.1em' }}>LINUX_QUEST_OS</h1>
+                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center', marginTop: '8px' }}>
+                                <span style={{ fontSize: '8px', fontWeight: 900, color: '#3b82f6', background: 'rgba(59, 130, 246, 0.1)', padding: '2px 8px', borderRadius: '4px' }}>v9.0.4-INDUSTRIAL</span>
+                                <span style={{ fontSize: '8px', fontWeight: 900, color: '#10b981', background: 'rgba(16, 185, 129, 0.1)', padding: '2px 8px', borderRadius: '4px' }}>KERNEL_ALIGNED</span>
+                             </div>
+                          </div>
+
+                          {/* BOOT LOG SIMULATION */}
+                          <div style={{ width: '100%', maxWidth: '300px', background: 'rgba(0,0,0,0.4)', padding: '16px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                             {[
+                               '[ OK ] INITIALIZING_CORE_DNA',
+                               '[ OK ] MOUNTING_BLOCK_STORAGE',
+                               '[ OK ] STARTING_WAYLAND_SHELL',
+                               '[ OK ] USER_AUTH_COMMITTED'
+                             ].map((log, i) => (
+                               <div key={i} style={{ display: 'flex', gap: '8px', fontSize: '9px', fontFamily: 'monospace', animation: `fadeIn ${0.5 + i * 0.2}s` }}>
+                                  <span style={{ color: '#10b981', fontWeight: 900 }}>[ OK ]</span>
+                                  <span style={{ color: '#fff', opacity: 0.4 }}>{log.split('] ')[1]}</span>
+                                </div>
+                             ))}
                           </div>
                        </div>
 
-                       <div style={{ textAlign: 'center' }}>
-                          <h1 style={{ fontSize: '32px', fontWeight: 900, color: '#fff', margin: 0, letterSpacing: '0.1em' }}>LINUX_QUEST_OS</h1>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center', marginTop: '8px' }}>
-                             <span style={{ fontSize: '8px', fontWeight: 900, color: '#3b82f6', background: 'rgba(59, 130, 246, 0.1)', padding: '2px 8px', borderRadius: '4px' }}>v9.0.4-INDUSTRIAL</span>
-                             <span style={{ fontSize: '8px', fontWeight: 900, color: '#10b981', background: 'rgba(16, 185, 129, 0.1)', padding: '2px 8px', borderRadius: '4px' }}>KERNEL_ALIGNED</span>
+                       {/* SCORE OVERLAY */}
+                       <div style={{ padding: '20px', background: 'rgba(255,255,255,0.03)', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column' }}>
+                             <span style={{ fontSize: '8px', fontWeight: 900, color: '#fff', opacity: 0.3 }}>SYSTEM_EFFICIENCY_INDEX</span>
+                             <span style={{ fontSize: '24px', fontWeight: 900, color: '#fff' }}>{gameData.finalScore || 0}</span>
                           </div>
-                       </div>
-
-                       {/* BOOT LOG SIMULATION */}
-                       <div style={{ width: '100%', maxWidth: '300px', background: 'rgba(0,0,0,0.4)', padding: '16px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                          {[
-                            '[ OK ] INITIALIZING_CORE_DNA',
-                            '[ OK ] MOUNTING_BLOCK_STORAGE',
-                            '[ OK ] STARTING_WAYLAND_SHELL',
-                            '[ OK ] USER_AUTH_COMMITTED'
-                          ].map((log, i) => (
-                            <div key={i} style={{ display: 'flex', gap: '8px', fontSize: '9px', fontFamily: 'monospace', animation: `fadeIn ${0.5 + i * 0.2}s` }}>
-                               <span style={{ color: '#10b981', fontWeight: 900 }}>[ OK ]</span>
-                               <span style={{ color: '#fff', opacity: 0.4 }}>{log.split('] ')[1]}</span>
-                            </div>
-                          ))}
+                          <div style={{ textAlign: 'right' }}>
+                             <span style={{ fontSize: '8px', fontWeight: 900, color: '#3b82f6' }}>STABILITY: 100%</span>
+                             <p style={{ fontSize: '7px', opacity: 0.3, margin: 0 }}>READY_FOR_DEPLOYMENT</p>
+                          </div>
                        </div>
                     </div>
 
-                    {/* SCORE OVERLAY */}
-                    <div style={{ padding: '20px', background: 'rgba(255,255,255,0.03)', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                       <div style={{ display: 'flex', flexDirection: 'column' }}>
-                          <span style={{ fontSize: '8px', fontWeight: 900, color: '#fff', opacity: 0.3 }}>SYSTEM_EFFICIENCY_INDEX</span>
-                          <span style={{ fontSize: '24px', fontWeight: 900, color: '#fff' }}>{gameData.finalScore || 0}</span>
-                       </div>
-                       <div style={{ textAlign: 'right' }}>
-                          <span style={{ fontSize: '8px', fontWeight: 900, color: '#3b82f6' }}>STABILITY: 100%</span>
-                          <p style={{ fontSize: '7px', opacity: 0.3, margin: 0 }}>READY_FOR_DEPLOYMENT</p>
-                       </div>
+                    {/* RIGHT PANEL: LEADERBOARD */}
+                    <div style={{ width: '320px', background: 'rgba(0,0,0,0.2)', padding: '24px', display: 'flex', flexDirection: 'column' }}>
+                       <Leaderboard scores={gameData.leaderboard || []} />
                     </div>
                   </div>
                 )}
@@ -208,8 +263,8 @@ const App: React.FC = () => {
              <div style={{ display: 'flex', gap: '12px' }}>
                 <button 
                   onClick={prevStep} 
-                  disabled={gameState === 0}
-                  style={{ padding: '10px 20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#fff', fontSize: '12px', fontWeight: 800, opacity: gameState === 0 ? 0.2 : 1, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+                  disabled={gameState === 0 || gameState === GameState.SUCCESS}
+                  style={{ padding: '10px 20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#fff', fontSize: '12px', fontWeight: 800, opacity: (gameState === 0 || gameState === GameState.SUCCESS) ? 0.2 : 1, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
                 >
                    <ChevronLeft size={16} />
                    Back
@@ -228,6 +283,8 @@ const App: React.FC = () => {
           * { -ms-overflow-style: none !important; scrollbar-width: none !important; }
           @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
           .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+          @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+          .animate-fade-in { animation: fadeIn 0.4s ease-out; }
         `}} />
       </div>
     </ErrorBoundary>
